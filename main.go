@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -14,7 +15,10 @@ import (
 
 var log = logger.New("cgroup-mover")
 
-const CGROUP_PATH = "/sys/fs/cgroup"
+const (
+	CGROUP_PATH  = "/sys/fs/cgroup"
+	CGROUP_PROCS = "cgroup.procs"
+)
 
 func main() {
 	var cgroupOld, cgroupNew string
@@ -24,9 +28,9 @@ func main() {
 
 	ticker := time.NewTicker(2 * time.Second)
 	for ; true; <-ticker.C {
-		pids := findChildProcesses(fmt.Sprintf("%s/%s/cgroup.procs", CGROUP_PATH, cgroupOld))
+		pids := findChildProcesses(path.Join(CGROUP_PATH, cgroupOld, CGROUP_PROCS))
 
-		if err := addToCgroup(pids, cgroupNew); err != nil {
+		if err := addToCgroup(pids, path.Join(CGROUP_PATH, cgroupNew, CGROUP_PROCS)); err != nil {
 			log.Errorw("Error trying to add pids to cgroup", err, pids, cgroupNew)
 		} else {
 			log.Infow("Pids to cgroup", pids, cgroupNew)
