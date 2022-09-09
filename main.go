@@ -29,9 +29,11 @@ func main() {
 		pids := findChildProcesses(path.Join(CGROUP_PATH, cgroupOld, CGROUP_PROCS))
 
 		if err := addToCgroup(pids, path.Join(CGROUP_PATH, cgroupNew, CGROUP_PROCS)); err != nil {
-			log.Errorw("Error trying to add pids to cgroup", err, pids, cgroupNew)
+			log.Errorf("Error trying to add pids to cgroup (%s)", cgroupNew)
 		} else {
-			log.Infow("Pids to cgroup", pids, cgroupNew)
+			for _, p := range pids {
+				log.Infof("%d -> %s", p, cgroupNew)
+			}
 		}
 	}
 }
@@ -52,18 +54,18 @@ func findChildProcesses(cgroupProcsFile string) (childPids []int) {
 }
 
 func addToCgroup(pids []int, cgroupProcsFile string) error {
-	f, err := os.OpenFile(cgroupProcsFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(cgroupProcsFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
+		log.Error(err)
 		return err
 	}
 	defer f.Close()
 
-	pidsString := ""
 	for _, pid := range pids {
-		pidsString += fmt.Sprintf("%d\n", pid)
-	}
-	if _, err := f.WriteString(pidsString); err != nil {
-		return err
+		if _, err := f.WriteString(fmt.Sprintf("%d\n", pid)); err != nil {
+			log.Errorw("Couldn't write pid to the groupc.procs file", "pid", pid, "err", err.Error())
+			return err
+		}
 	}
 	return nil
 }
