@@ -3,7 +3,6 @@ module cgroup-mover
 go 1.18
 
 require (
-	github.com/karantan/gofp v1.2.0
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/zap v1.23.0
 )

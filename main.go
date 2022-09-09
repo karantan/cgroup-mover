@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/karantan/gofp"
 )
 
 var log = logger.New("cgroup-mover")
@@ -38,20 +36,18 @@ func main() {
 	}
 }
 
-func findChildProcesses(cgroupProcsFile string) []int {
+func findChildProcesses(cgroupProcsFile string) (childPids []int) {
 	allPidsRaw, err := os.ReadFile(cgroupProcsFile)
 	if err != nil {
 		log.Fatalln("error opening file", cgroupProcsFile, err)
-		return []int{}
+		return
 	}
 	// 1 pid is the master process which we don't want to move
 	pidsRaw := strings.Split(strings.TrimSpace(string(allPidsRaw)), "\n")[1:]
-
-	childPids := gofp.ForEach(func(s string) int {
-		i, _ := strconv.Atoi(s)
-		return i
-	}, pidsRaw)
-
+	for _, p := range pidsRaw {
+		i, _ := strconv.Atoi(p)
+		childPids = append(childPids, i)
+	}
 	return childPids
 }
 
