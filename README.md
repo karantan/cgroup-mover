@@ -28,3 +28,28 @@ Usage of cgroup-mover:
 
 $ cgroup-mover --old grp1 --new grp2
 ```
+
+## Nix
+
+Build it with nix by running:
+```bash
+$ nix-build -E "with import <nixpkgs> {}; callPackage ./default.nix {}"
+```
+
+Add it to NixOS:
+```bash
+{ config, pkgs, lib, ... }:
+let
+
+  psusage = pkgs.callPackage (import (fetchGit {
+    url = "git@github.com:karantan/cgroup-mover";
+    ref = "master";
+    rev = "<commit>"; # v1.x.y
+  })) { };
+
+in {
+  environment.systemPackages = [
+    cgroup-mover
+  ];
+}
+```

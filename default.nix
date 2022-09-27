@@ -4,7 +4,7 @@
 
 buildGoModule rec {
   pname = "cgroup-mover";
-  version = "0.1.0";
+  version = "1.0.0";
 
   src = nix-gitignore.gitignoreSource [ ] ./.;
 
@@ -15,10 +15,9 @@ buildGoModule rec {
   # hash mismatch in fixed-output derivation '/nix/store/m1ga09c0z1a6n7rj8ky3s31dpgalsn0n-source':
   # wanted: sha256:0000000000000000000000000000000000000000000000000000
   # got:    sha256:173gxk0ymiw94glyjzjizp8bv8g72gwkjhacigd1an09jshdrjb4
-  vendorSha256 = "0000000000000000000000000000000000000000000000000000";
+  vendorSha256 = "1j65dmvck1rgn3kdpqjhaf26idk0ri9lagj9agp9c4izsbplvxbm";
 
-  buildFlagsArray = ''
-    -ldflags=
-        -X cdp/version.Version=${version}
+  ldflags = ''
+    -X cdp/version.Version=${version}
   '';
 }
