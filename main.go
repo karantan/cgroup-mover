@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path"
 	"strconv"
 	"strings"
@@ -19,14 +20,21 @@ const (
 )
 
 func main() {
-	var cgroupOld, cgroupNew string
+	var cgroupOld, user, cgroupNew string
 	flag.StringVar(&cgroupOld, "old", "", "Cgroup FROM all child processes will be moved")
+	flag.StringVar(&user, "user", "", "User of which all processes will be moved")
 	flag.StringVar(&cgroupNew, "new", "", "Cgroup TO which all child processes will be moved")
 	flag.Parse()
 
 	ticker := time.NewTicker(2 * time.Second)
+	var pids []int
 	for ; true; <-ticker.C {
-		pids := findChildProcesses(path.Join(CGROUP_PATH, cgroupOld, CGROUP_PROCS))
+		if cgroupOld != "" {
+			pids = append(pids, findChildProcesses(path.Join(CGROUP_PATH, cgroupOld, CGROUP_PROCS))...)
+		}
+		if user != "" {
+			pids = append(pids, findUserProcesses(user)...)
+		}
 
 		if err := addToCgroup(pids, path.Join(CGROUP_PATH, cgroupNew, CGROUP_PROCS)); err != nil {
 			log.Errorf("Error trying to add pids to cgroup (%s)", cgroupNew)
@@ -36,6 +44,21 @@ func main() {
 			}
 		}
 	}
+}
+
+func findUserProcesses(user string) (childPids []int) {
+	cmd := exec.Command("pgrep", "--uid", user)
+	out, err := cmd.Output()
+	if err != nil {
+		log.Warnf("Problems finding processes for user %s", user)
+		log.Error(err)
+	}
+	pidsRaw := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for _, p := range pidsRaw {
+		i, _ := strconv.Atoi(p)
+		childPids = append(childPids, i)
+	}
+	return
 }
 
 func findChildProcesses(cgroupProcsFile string) (childPids []int) {

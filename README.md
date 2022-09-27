@@ -20,6 +20,8 @@ $ cgroup-mover --help
 Usage of cgroup-mover:
   -new string
     	Cgroup TO which all child processes will be moved
+  -user string
+      User of which all processes will be moved
   -old string
     	Cgroup FROM all child processes will be moved
 
