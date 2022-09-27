@@ -22,12 +22,12 @@ const (
 func main() {
 	var cgroupOld, user, cgroupNew string
 	flag.StringVar(&cgroupOld, "old", "", "Cgroup FROM all child processes will be moved")
-	flag.StringVar(&user, "user", "", "User of which all processes will be moved")
+	flag.StringVar(&user, "user", "", "User of which all processes will be moved (e.g. foo_bar)")
 	flag.StringVar(&cgroupNew, "new", "", "Cgroup TO which all child processes will be moved")
 	flag.Parse()
 
-	ticker := time.NewTicker(2 * time.Second)
-	var pids []int
+	ticker := time.NewTicker(5 * time.Second)
+	var pids, movedPIDs []int
 	for ; true; <-ticker.C {
 		if cgroupOld != "" {
 			pids = append(pids, findChildProcesses(path.Join(CGROUP_PATH, cgroupOld, CGROUP_PROCS))...)
@@ -40,7 +40,11 @@ func main() {
 			log.Errorf("Error trying to add pids to cgroup (%s)", cgroupNew)
 		} else {
 			for _, p := range pids {
+				if pidExists(p, movedPIDs) {
+					continue
+				}
 				log.Infof("%d -> %s", p, cgroupNew)
+				movedPIDs = append(movedPIDs, p)
 			}
 		}
 	}
@@ -91,4 +95,13 @@ func addToCgroup(pids []int, cgroupProcsFile string) error {
 		}
 	}
 	return nil
+}
+
+func pidExists(pid int, pids []int) bool {
+	for _, p := range pids {
+		if p == pid {
+			return true
+		}
+	}
+	return false
 }

@@ -1,14 +1,15 @@
 # Control Group Mover (cgroup-mover) ![gha build](https://github.com/karantan/cgroup-mover/workflows/Go/badge.svg)
 
-`cgroup-mover` is a simple tool that helps moving child processes to a different cgroup.
+`cgroup-mover` is a simple tool that helps moving processes from one cgroup to a another
+cgroup.
 
-The idea is to have one cgroup for the master process and a different one for its child
-processes. This way we can define e.g. max CPU usage for each child process.
+The idea is to have one cgroup for processes that you want to limit because they consume
+too much server resources.
 
 Idealy this should be done when a child process is spawn, but this is sometims hard to do
 (e.g. php-fpm child workers).
 
-We check for child workers every 2 seconds because:
+That's why we check for child workers every 5 seconds because:
 1. We don't want to check too often and cause problems (e.g. file locking)
 2. Some processes need a bit more resources at startup (first 1-2 sec) so we try being
 nice to them.
@@ -21,7 +22,7 @@ Usage of cgroup-mover:
   -new string
     	Cgroup TO which all child processes will be moved
   -user string
-      User of which all processes will be moved
+      User of which all processes will be moved (e.g. foo_bar)
   -old string
     	Cgroup FROM all child processes will be moved
 
